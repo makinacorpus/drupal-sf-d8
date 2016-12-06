@@ -3,6 +3,7 @@
 namespace MakinaCorpus\Drupal\Sf\Container\DependencyInjection;
 
 use Symfony\Component\DependencyInjection\ContainerBuilder as SymfonyContainerBuilder;
+use Symfony\Component\DependencyInjection\Container;
 
 class ContainerBuilder extends SymfonyContainerBuilder
 {
@@ -23,6 +24,13 @@ class ContainerBuilder extends SymfonyContainerBuilder
         // @see \Drupal\Core\DependencyInjection\Compiler\BackendCompilerPass
         if (null === $service && 'database' === $id) {
             return;
+        }
+
+        // We need those to be considered as synthetic even thought there are
+        // not (<del>thank</del><strong>fuck</string> you, Drupal for being so
+        // nice with Symfony API.
+        if ('session' === $id || 'request_stack' === $id) {
+            return Container::set($id, $service, $scope);
         }
 
         return parent::set($id, $service, $scope);
