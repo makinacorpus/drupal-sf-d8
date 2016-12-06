@@ -4,6 +4,7 @@ namespace MakinaCorpus\Drupal\Sf\Container\DependencyInjection\Compiler;
 
 use MakinaCorpus\Drupal\Sf\EventDispatcher\ContainerAwareEventDispatcher as CompatEventDispatcher;
 use MakinaCorpus\Drupal\Sf\HttpKernel\Controller\TraceableControllerResolver as CompatTraceableControllerResolver;
+use MakinaCorpus\Drupal\Sf\Twig\Environment as CompatTwigEnvironment;
 use MakinaCorpus\Drupal\Sf\Twig\Extension\TranslationExtension as CompatTranslationExtension;
 
 use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
@@ -26,6 +27,10 @@ class DrupalCompatibilityPass implements CompilerPassInterface
 
         if ($container->has('twig.extension.trans')) {
             $container->getDefinition('twig.extension.trans')->setClass(CompatTranslationExtension::class);
+        }
+
+        if ($container->has('twig')) {
+            $container->getDefinition('twig')->setClass(CompatTwigEnvironment::class);
         }
     }
 }
