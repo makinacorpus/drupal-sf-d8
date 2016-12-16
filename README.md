@@ -16,3 +16,4 @@ instead, it will pull all the required dependencies and setup the environment co
  *  you cannot use authorize.php
  *  you cannot use the statistics module
  *  you cannot use the core installer
+ *  you cannot do multisite anymore (who does this anyway?)
