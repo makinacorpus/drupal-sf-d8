@@ -6,6 +6,7 @@ use Drupal\Component\FileCache\FileCacheFactory;
 use Drupal\Component\Utility\UrlHelper;
 use Drupal\Core\Config\BootstrapConfigStorageFactory;
 use Drupal\Core\Config\NullStorage;
+use Drupal\Core\Database\Database;
 use Drupal\Core\DependencyInjection\ServiceModifierInterface;
 use Drupal\Core\DependencyInjection\ServiceProviderInterface;
 use Drupal\Core\DrupalKernel as StaticDrupalKernel;
@@ -18,6 +19,7 @@ use Drupal\Core\Site\Settings;
 use MakinaCorpus\Drupal\Sf\Container\DependencyInjection\Compiler\DrupalCompatibilityPass;
 use MakinaCorpus\Drupal\Sf\Container\DependencyInjection\ContainerBuilder as CustomContainerBuilder;
 use MakinaCorpus\Drupal\Sf\Container\DependencyInjection\ParameterBag\DrupalParameterBag;
+use MakinaCorpus\Drupal\Sf\Settings\ContainerArrayProxy;
 
 use Symfony\Bridge\ProxyManager\LazyProxy\Instantiator\RuntimeInstantiator;
 use Symfony\Cmf\Component\Routing\RouteObjectInterface;
@@ -56,6 +58,16 @@ class DrupalAppKernel extends AppKernel implements DrupalKernelInterface
     /**
      * {@inheritdoc}
      */
+    public function boot()
+    {
+        parent::boot();
+
+        return $this;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
     public function setSitePath($path)
     {
         if ($this->booted) {
@@ -88,41 +100,6 @@ class DrupalAppKernel extends AppKernel implements DrupalKernelInterface
         return [
             'sync' => $this->rootDir.'/config/drupal/sync',
         ];
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function boot()
-    {
-        if ($this->booted) {
-            return $this;
-        }
-
-        // Ensure that findSitePath is set.
-        if (!$this->sitePath) {
-            throw new \Exception('Kernel does not have site path set before calling boot()');
-        }
-
-        // Initialize the FileCacheFactory component. We have to do it here instead
-        // of in \Drupal\Component\FileCache\FileCacheFactory because we can not use
-        // the Settings object in a component.
-        $configuration = Settings::get('file_cache');
-
-        // Provide a default configuration, if not set.
-        if (!isset($configuration['default'])) {
-            // @todo Use extension_loaded('apcu') for non-testbot
-            //  https://www.drupal.org/node/2447753.
-            if (function_exists('apcu_fetch')) {
-                $configuration['default']['cache_backend_class'] = '\Drupal\Component\FileCache\ApcuFileCacheBackend';
-            }
-        }
-        FileCacheFactory::setConfiguration($configuration);
-        FileCacheFactory::setPrefix(Settings::getApcuPrefix('file_cache', $this->getAppRoot()));
-
-        parent::boot();
-
-        return $this;
     }
 
     /**
@@ -245,10 +222,18 @@ class DrupalAppKernel extends AppKernel implements DrupalKernelInterface
     {
         if (self::MASTER_REQUEST === $type) {
             StaticDrupalKernel::bootEnvironment($this->getAppRoot());
-            $this->initializeSettings($request);
+            $this->setSitePath(StaticDrupalKernel::findSitePath($request));
         }
 
-        return parent::handle($request, $type, $catch);
+        if (false === $this->booted) {
+            $this->boot();
+        }
+
+        if (self::MASTER_REQUEST === $type) {
+            $this->intializeRequest($request);
+        }
+
+        return $this->getHttpKernel()->handle($request, $type, $catch);
     }
 
     /**
@@ -366,6 +351,7 @@ class DrupalAppKernel extends AppKernel implements DrupalKernelInterface
     {
         parent::initializeContainer();
 
+        $this->initializeSettings($this->container);
         $this->attachSyntheticServices($this->container);
         \Drupal::setContainer($this->container);
     }
@@ -374,22 +360,55 @@ class DrupalAppKernel extends AppKernel implements DrupalKernelInterface
      * This is not part of the public API but will actually trick Drupal into
      * bootstrapping correctly when using the bootEnvironment() method
      *
+     * @param ContainerInterface $container
+     *
      * @see \Drupal\Core\DrupalKernel::initializeSettings()
      * @see \Drupal\Core\DrupalKernel::createFromRequest()
      */
-    private function initializeSettings(Request $request)
+    private function initializeSettings(ContainerInterface $container)
     {
-        $site_path = StaticDrupalKernel::findSitePath($request);
-
         // Override a few "Settings" before initializing it.
         $configDirectories = $this->getDrupalConfigDirectory();
         if ($configDirectories) {
             $GLOBALS['config_directories'] = $configDirectories;
         }
 
-        $this->setSitePath($site_path);
-        Settings::initialize($this->getAppRoot(), $site_path, $this->classLoader);
+        if ($container->hasParameter('databases')) {
+            Database::setMultipleConnectionInfo($container->getParameter('databases'));
+        }
 
+        Settings::initialize($this->getAppRoot(), $this->sitePath, $this->classLoader);
+
+        // SERIOUS HACK, CLOSE YOUR EYES! build and register new settings from
+        // container parameters instead.
+        (new Settings(new ContainerArrayProxy($container)));
+
+        // Initialize the FileCacheFactory component. We have to do it here instead
+        // of in \Drupal\Component\FileCache\FileCacheFactory because we can not use
+        // the Settings object in a component.
+        $configuration = Settings::get('file_cache');
+
+        // Provide a default configuration, if not set.
+        if (!isset($configuration['default'])) {
+            // @todo Use extension_loaded('apcu') for non-testbot
+            //  https://www.drupal.org/node/2447753.
+            if (function_exists('apcu_fetch')) {
+                $configuration['default']['cache_backend_class'] = '\Drupal\Component\FileCache\ApcuFileCacheBackend';
+            }
+        }
+        FileCacheFactory::setConfiguration($configuration);
+        FileCacheFactory::setPrefix(Settings::getApcuPrefix('file_cache', $this->getAppRoot()));
+    }
+
+    /**
+     * Initialize request.
+     *
+     * @param Request $request
+     *
+     * @see \Drupal\Core\DrupalKernel::initializeSettings()
+     */
+    private function intializeRequest(Request $request)
+    {
         // Initialize our list of trusted HTTP Host headers to protect against
         // header attacks.
         $host_patterns = Settings::get('trusted_host_patterns', []);
@@ -492,6 +511,8 @@ class DrupalAppKernel extends AppKernel implements DrupalKernelInterface
     protected function buildContainer()
     {
         $container = parent::buildContainer();
+
+        $this->initializeSettings($container);
 
         $this->initializeServiceProviders();
         $container->set('kernel', $this);
