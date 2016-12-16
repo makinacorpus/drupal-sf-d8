@@ -179,7 +179,7 @@ class DrupalAppKernel extends AppKernel implements DrupalKernelInterface
             $this->moduleList = isset($extensions['module']) ? $extensions['module'] : [];
         }
         $module_filenames = $this->getModuleFileNames();
-        $this->classLoaderAddMultiplePsr4($this->getModuleNamespacesPsr4($module_filenames));
+        //$this->classLoaderAddMultiplePsr4($this->getModuleNamespacesPsr4($module_filenames));
 
         // Load each module's serviceProvider class.
         foreach ($module_filenames as $module => $filename) {
@@ -337,7 +337,7 @@ class DrupalAppKernel extends AppKernel implements DrupalKernelInterface
 
     private function attachSyntheticServices(ContainerInterface $container)
     {
-        $this->classLoaderAddMultiplePsr4($container->getParameter('container.namespaces'));
+        //$this->classLoaderAddMultiplePsr4($container->getParameter('container.namespaces'));
         $container->set('kernel', $this);
         $container->set('class_loader', $this->classLoader);
     }
@@ -540,6 +540,7 @@ class DrupalAppKernel extends AppKernel implements DrupalKernelInterface
                 }
             }
         }
+        // Modules do use it, and that's SO WRONG.
         $container->setParameter('container.namespaces', $namespaces);
 
         // In some case, especially when errors happen, the container is needed
@@ -720,29 +721,6 @@ class DrupalAppKernel extends AppKernel implements DrupalKernelInterface
         }
 
         return $namespaces;
-    }
-
-    /**
-     * Registers a list of namespaces with PSR-4 directories for class loading.
-     *
-     * @param array $namespaces
-     *   Array where each key is a namespace like 'Drupal\system', and each value
-     *   is either a PSR-4 base directory, or an array of PSR-4 base directories
-     *   associated with this namespace.
-     */
-    private function classLoaderAddMultiplePsr4(array $namespaces = [])
-    {
-        foreach ($namespaces as $prefix => $paths) {
-            if (is_array($paths)) {
-                foreach ($paths as $key => $value) {
-                    $paths[$key] = $this->getAppRoot() . '/' . $value;
-                }
-            } else if (is_string($paths)) {
-                $paths = $this->getAppRoot() . '/' . $paths;
-            }
-
-            $this->classLoader->addPsr4($prefix . '\\', $paths);
-        }
     }
 
     /**
