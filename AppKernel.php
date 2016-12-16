@@ -177,9 +177,6 @@ abstract class AppKernel extends Kernel
 
             $this->container = $container;
         } else {
-//           var_dump(class_exists('appDevDebugProjectContainer', false));
-//           var_dump(class_exists('appDevDebugProjectContainer', true));
-//           var_dump($cache->getPath());
             require_once $cache->getPath();
 
             $this->container = new $class();
