@@ -29,7 +29,7 @@ class ContainerBuilder extends SymfonyContainerBuilder
         // We need those to be considered as synthetic even thought there are
         // not (<del>thank</del><strong>fuck</string> you, Drupal for being so
         // nice with Symfony API.
-        if ('session' === $id || 'request_stack' === $id) {
+        if ('session' === $id || 'request_stack' === $id || 'router.route_provider' === $id) {
             return Container::set($id, $service, $scope);
         }
 
