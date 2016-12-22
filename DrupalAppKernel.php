@@ -367,17 +367,17 @@ class DrupalAppKernel extends AppKernel implements DrupalKernelInterface
      */
     private function initializeSettings(ContainerInterface $container)
     {
-        // Override a few "Settings" before initializing it.
-        $configDirectories = $this->getDrupalConfigDirectory();
-        if ($configDirectories) {
-            $GLOBALS['config_directories'] = $configDirectories;
-        }
-
         if ($container->hasParameter('databases')) {
             Database::setMultipleConnectionInfo($container->getParameter('databases'));
         }
 
         Settings::initialize($this->getAppRoot(), $this->sitePath, $this->classLoader);
+
+        // Override a few "Settings" before initializing it.
+        $configDirectories = $this->getDrupalConfigDirectory();
+        if ($configDirectories) {
+            $GLOBALS['config_directories'] = $configDirectories;
+        }
 
         // SERIOUS HACK, CLOSE YOUR EYES! build and register new settings from
         // container parameters instead.
