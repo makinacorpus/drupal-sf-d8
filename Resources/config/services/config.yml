@@ -1,0 +1,9 @@
+services:
+
+    config.storage.php:
+        class: MakinaCorpus\Drupal\Sf\Config\PhpStorage
+        arguments: ['%kernel.cache_dir%/drupal-config']
+
+    config.storage:
+        class: MakinaCorpus\Drupal\Sf\Config\FallbackStorage
+        arguments: ['@config.storage.php', '@config.storage.active']
