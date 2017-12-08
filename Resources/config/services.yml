@@ -1,4 +1,4 @@
 imports:
-    - { resource: services/config.yml }
-    - { resource: services/http_kernel.yml }
+#    - { resource: services/config.yml }
+#    - { resource: services/http_kernel.yml }
     - { resource: services/templating.yml }

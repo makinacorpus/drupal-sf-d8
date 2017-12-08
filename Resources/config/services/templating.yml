@@ -1,16 +1,5 @@
 services:
 
-    # Symfony's one will be overriden by Drupal core, we need to restore its
-    # original name, because the TwigExtension will successively add the
-    # addPath() call for each bundle, not restoring the orignal name will
-    # result in a incomplete file system loader configuration and Symfony
-    # full stack templating engine will not work.
-    twig.loader.filesystem:
-        class: Symfony\Bundle\TwigBundle\Loader\FilesystemLoader
-        arguments: ["@templating.locator", "@templating.name_parser", "twig.loader"]
-        tags: [{name: twig.loader, priority: 100}]
-
-    twig.loader.drupal.filesystem:
-        class: Drupal\Core\Template\Loader\FilesystemLoader
-        arguments: ['@app.root', '@module_handler', '@theme_handler']
-        tags: [{name: twig.loader, priority: 200}]
+    twig.loader.filesystem.configurator:
+        class: MakinaCorpus\Drupal\Sf\Twig\FilesystemLoaderConfigurator
+        arguments: ['@kernel', '@module_handler', '@theme_handler']

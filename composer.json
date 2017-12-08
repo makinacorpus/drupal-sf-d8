@@ -24,7 +24,7 @@
     },
     "autoload": {
         "psr-4": {
-            "MakinaCorpus\\Sfd8\\": ""
+            "MakinaCorpus\\Drupal\\Sf\\": ""
         }
     }
 }

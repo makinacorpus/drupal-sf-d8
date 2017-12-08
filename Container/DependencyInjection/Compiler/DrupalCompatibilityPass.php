@@ -6,9 +6,12 @@ use MakinaCorpus\Drupal\Sf\EventDispatcher\ContainerAwareEventDispatcher as Comp
 use MakinaCorpus\Drupal\Sf\HttpKernel\Controller\TraceableControllerResolver as CompatTraceableControllerResolver;
 use MakinaCorpus\Drupal\Sf\Twig\Environment as CompatTwigEnvironment;
 use MakinaCorpus\Drupal\Sf\Twig\Extension\TranslationExtension as CompatTranslationExtension;
-
-use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
+use Symfony\Component\DependencyInjection\Definition;
+use Drupal\Core\Template\Loader\FilesystemLoader as DrupalFilesystemLoader;
+use Symfony\Bundle\TwigBundle\Loader\FilesystemLoader as SymfonyFilesystemLoader;
+use Symfony\Component\DependencyInjection\Reference;
 
 class DrupalCompatibilityPass implements CompilerPassInterface
 {
@@ -32,5 +35,19 @@ class DrupalCompatibilityPass implements CompilerPassInterface
         if ($container->has('twig')) {
             $container->getDefinition('twig')->setClass(CompatTwigEnvironment::class);
         }
+
+        // Re-using the definition allows to keep already set method calls
+        // and such ensures that we keep all registered custom namespaces.
+        $container
+            ->getDefinition('twig.loader.filesystem')
+            ->setClass(SymfonyFilesystemLoader::class)
+            ->setArguments([
+                new Reference('templating.locator'),
+                new Reference('templating.name_parser'),
+                "twig.loader"
+            ])
+            ->addTag('twig.loader', ['priority' => 100])
+            ->setConfigurator([new Reference('twig.loader.filesystem.configurator'), 'configure'])
+        ;
     }
 }
