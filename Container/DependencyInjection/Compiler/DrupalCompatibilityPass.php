@@ -6,12 +6,10 @@ use MakinaCorpus\Drupal\Sf\EventDispatcher\ContainerAwareEventDispatcher as Comp
 use MakinaCorpus\Drupal\Sf\HttpKernel\Controller\TraceableControllerResolver as CompatTraceableControllerResolver;
 use MakinaCorpus\Drupal\Sf\Twig\Environment as CompatTwigEnvironment;
 use MakinaCorpus\Drupal\Sf\Twig\Extension\TranslationExtension as CompatTranslationExtension;
-use Symfony\Component\DependencyInjection\ContainerBuilder;
-use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
-use Symfony\Component\DependencyInjection\Definition;
-use Drupal\Core\Template\Loader\FilesystemLoader as DrupalFilesystemLoader;
 use Symfony\Bundle\TwigBundle\Loader\FilesystemLoader as SymfonyFilesystemLoader;
+use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Reference;
+use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
 
 class DrupalCompatibilityPass implements CompilerPassInterface
 {

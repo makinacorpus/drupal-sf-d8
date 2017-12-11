@@ -4,10 +4,9 @@ namespace MakinaCorpus\Drupal\Sf\HttpKernel\Controller\ArgumentResolver;
 
 use Drupal\Core\Routing\RouteMatch;
 use Drupal\Core\Routing\RouteMatchInterface;
-
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpKernel\ControllerMetadata\ArgumentMetadata;
 use Symfony\Component\HttpKernel\Controller\ArgumentValueResolverInterface;
+use Symfony\Component\HttpKernel\ControllerMetadata\ArgumentMetadata;
 
 /**
  * Enabling the fullstack framework will override the argument resolver so we

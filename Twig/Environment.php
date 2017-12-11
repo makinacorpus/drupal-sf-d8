@@ -18,36 +18,13 @@ class Environment extends \Twig_Environment
         require_once $root . '/core/themes/engines/twig/twig.engine';
 
         // @todo will restore that later
-        $options['cache'] = false;
-
-        /*
-        $this->templateClasses = [];
-
-        $options += [
-            // @todo Ensure garbage collection of expired files.
-            'cache' => TRUE,
-            'debug' => FALSE,
-            'auto_reload' => NULL,
-        ];
-        // Ensure autoescaping is always on.
-        $options['autoescape'] = 'html';
-
-        if ($options['cache'] === TRUE) {
-          $current = $state->get('twig_extension_hash_prefix', ['twig_extension_hash' => '']);
-          if ($current['twig_extension_hash'] !== $twig_extension_hash || empty($current['twig_cache_prefix'])) {
-            $current = [
-              'twig_extension_hash' => $twig_extension_hash,
-              // Generate a new prefix which invalidates any existing cached files.
-              'twig_cache_prefix' => uniqid(),
-
-            ];
-            $state->set('twig_extension_hash_prefix', $current);
-          }
-          $this->twigCachePrefix = $current['twig_cache_prefix'];
-
-          $options['cache'] = new TwigPhpStorageCache($cache, $this->twigCachePrefix);
-        }
-        */
+        //   Drupal 8 overrides twig environment configuration with %twig.config%
+        //   but sadly for us the original twig options are built from
+        //   Symfony\Bundle\TwigBundle\DependencyInjection\TwigExtension and we
+        //   cannot interfere and fetch once again...
+        //   for now, this is hardcoded, but will be replaced eventually using
+        //   %kernel.cache_dir%/twig
+        $options['cache'] = dirname($root).'/var/cache/dev/twig';
 
         $this->loader = $loader;
 

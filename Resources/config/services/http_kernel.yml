@@ -1,4 +1,5 @@
 services:
+
     drupal.compat.argument_resolver:
         public: false
         class: MakinaCorpus\Drupal\Sf\HttpKernel\Controller\ArgumentResolver\DrupalArgumentResolver
