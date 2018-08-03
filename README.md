@@ -2,6 +2,8 @@
 
 **This is very experimental, whatever you try to do, it will explode. You've been warned.**
 
+For something that actually works, please use https://github.com/makinacorpus/drupal-sf-int instead.
+
 Replaces the DrupalKernel with a Symfony kernel (almost) transparently.
 
 # Getting started
